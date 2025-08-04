@@ -1,0 +1,1 @@
+This repository serves as a bridge between Forgejo and GitHub workflows, allowing forgejo jobs to run on GitHub infra.

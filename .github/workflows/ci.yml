@@ -1,0 +1,65 @@
+name: CI Runner
+
+on:
+  workflow_dispatch:
+  repository_dispatch:
+    types: [run_ci]
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  ci:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Get Runner Version
+        id: runner_version
+        run: |
+          VER="$(curl -s https://code.forgejo.org/api/v1/repos/forgejo/runner/releases/latest | jq .name -r | cut -c 2-)"
+          echo "version=$VER" >> $GITHUB_OUTPUT
+      - name: Cache Runner
+        id: cache_runner
+        uses: actions/cache@v4
+        with:
+          key: fj-runner-${{ steps.runner_version.outputs.version }}
+          path: runner
+      - name: Download Runner
+        if: ${{ steps.cache_runner.outputs.cache-hit != 'true' }}
+        run: |
+          if [[ "$(uname -m)" == "aarch64" ]]; then
+            RUNNERARCH="arm64"
+          else
+            RUNNERARCH="amd64"
+          fi
+          curl -Ls "https://code.forgejo.org/forgejo/runner/releases/download/v${{ steps.runner_version.outputs.version }}/forgejo-runner-${{ steps.runner_version.outputs.version }}-linux-${RUNNERARCH}.xz" | unxz > runner
+          chmod +x runner
+      - name: Register Runner
+        run: |
+          if [[ "$(uname -m)" == "aarch64" ]]; then
+            printf '%s\n' '${{ secrets.RUNNER_REGISTRATION_AARCH64 }}' > .runner
+            mv config_aarch64.yaml config.yaml
+          else
+            printf '%s\n' '${{ secrets.RUNNER_REGISTRATION_X86_64 }}' > .runner
+            mv config_x86_64.yaml config.yaml
+          fi
+      - name: Download Actions Cache
+        uses: actions/cache/restore@v4
+        with:
+          key: act-cache-${{ matrix.os }}
+          path: actcache
+          restore-keys: |
+            act-cache-${{ matrix.os }}-
+      - name: Run Runner
+        run: ./runner one-job -c config.yaml
+      - name: Save Actions Cache
+        uses: actions/cache/save@v4
+        with:
+          key: act-cache-${{ matrix.os }}-act-${{ hashFiles('actcache/**') }}
+          path: actcache

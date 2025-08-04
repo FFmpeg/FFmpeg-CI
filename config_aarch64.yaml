@@ -1,0 +1,25 @@
+log:
+  level: info
+  job_level: info
+
+runner:
+  file: .runner
+  capacity: 1
+  timeout: 3h
+  shutdown_timeout: 1h
+  insecure: false
+  fetch_timeout: 5s
+  labels: ["linux-aarch64:docker://ghcr.io/btbn/ffmpeg-builds/base:latest-arm"]
+
+cache:
+  enabled: true
+  dir: actcache
+
+container:
+  network: ""
+  enable_ipv6: false
+  privileged: false
+  options:
+  workdir_parent:
+  force_pull: true
+  force_rebuild: true
