@@ -58,7 +58,12 @@ jobs:
           restore-keys: |
             act-cache-${{ matrix.os }}-
       - name: Run Runner
-        run: ./runner one-job -c config.yaml
+        run: |
+          ./runner one-job -c config.yaml |& tee runner.log || RUNNER_RET=$?
+          if [[ -n "$RUNNER_RET" ]] && ! grep -q "Error: could not fetch task" runner.log; then
+            exit "$RUNNER_RET"
+          fi
+          exit 0
       - name: Save Actions Cache
         uses: actions/cache/save@v4
         with:
