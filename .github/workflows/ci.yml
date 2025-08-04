@@ -72,6 +72,7 @@ jobs:
           exit 0
       - name: Cache Docker Images
         run: |
+          [[ -n "$(docker image ls -q)" ]] || exit 0
           docker image save $(docker image ls --format '{{.Repository}}:{{.Tag}}' | grep -v '<none>') | gzip > actcache/docker_images.tar.gz
       - name: Save Actions Cache
         uses: actions/cache/save@v4
