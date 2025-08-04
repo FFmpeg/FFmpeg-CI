@@ -15,7 +15,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest,ubuntu-24.04-arm]
-        runner_id: [1,2,3,4,5]
+        runner_id: [1,2,3]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
