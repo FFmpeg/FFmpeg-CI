@@ -51,7 +51,6 @@ jobs:
             mv config_x86_64.yaml config.yaml
           fi
       - name: Download Actions Cache
-        id: act_cache
         uses: actions/cache/restore@v4
         with:
           key: act-cache-${{ matrix.os }}
@@ -75,13 +74,8 @@ jobs:
         run: |
           [[ -n "$(docker image ls -q)" ]] || exit 0
           docker image save $(docker image ls --format '{{.Repository}}:{{.Tag}}' | grep -v '<none>') | gzip > actcache/docker_images.tar.gz
-      - name: Calculate Cache Hash
-        id: cache_hash
-        run: |
-          echo "hash=$(find actcache -type f -print0 | sort -z | xargs -0 sha1sum | sha1sum | cut -d' ' -f1)" >> $GITHUB_OUTPUT
       - name: Save Actions Cache
         uses: actions/cache/save@v4
-        if: ${{ format('act-cache-{0}-act-{1}', matrix.os, steps.cache_hash.outputs.hash) != steps.act_cache.outputs.cache-matched-key }}
         with:
-          key: act-cache-${{ matrix.os }}-act-${{ steps.cache_hash.outputs.hash }}
+          key: act-cache-${{ matrix.os }}
           path: actcache
