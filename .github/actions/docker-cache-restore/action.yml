@@ -1,0 +1,55 @@
+name: 'Docker Image Cache Restore'
+description: 'Restore Docker images from cache key'
+
+inputs:
+  cache-key:
+    description: 'Cache key prefix'
+    required: false
+    default: 'docker-image-cache'
+outputs:
+  cache-hit:
+    description: 'Whether cache was hit'
+    value: ${{ steps.docker_cache_restore.outputs.cache-hit }}
+  cache-matched-key:
+    description: 'The key of the cache that was matched'
+    value: ${{ steps.docker_cache_restore.outputs.cache-matched-key }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install Tar-Helper
+      shell: sudo install -o root -m 755 {0} /usr/local/bin/tar
+      run: |
+        #!/bin/bash
+        set -euo pipefail
+        outf=""
+        cmpr="gzip"
+        args=("$@")
+        for ((i=0; i<${#args[@]}; i++)); do
+          arg="${args[i]}"
+          case "$arg" in
+            --use-compress-program)
+              cmpr="${args[i+1]}"
+              ;;
+            --use-compress-program=*)
+              cmpr="${arg#*=}"
+              ;;
+            -[a-zA-Z]*)
+              if [[ "$arg" == *f* ]]; then
+                outf="${args[i+1]}"
+              fi
+              ;;
+          esac
+        done
+        set -x
+        "$cmpr" -d < "$outf" | docker image load
+    - name: Restore Docker Cache
+      id: docker_cache_restore
+      uses: actions/cache/restore@v4
+      with:
+        key: ${{ inputs.cache-key }}
+        path: .
+        restore-keys: ${{ inputs.cache-key }}-
+    - name: Remove Tar-Helper
+      shell: bash
+      run: sudo rm /usr/local/bin/tar
