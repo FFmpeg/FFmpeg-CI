@@ -58,11 +58,10 @@ jobs:
           restore-keys: |
             act-cache-${{ matrix.os }}-
       - name: Restore Docker Images
-        run: |
-          docker system prune -a -f
-          if [[ -f actcache/docker_images.tar.gz ]]; then
-            docker image load -i actcache/docker_images.tar.gz
-          fi
+        id: docker_cache_restore
+        uses: ./.github/actions/docker-cache-restore
+        with:
+          cache-key: docker-image-cache-${{ matrix.os }}
       - name: Run Runner
         run: |
           ./runner one-job -c config.yaml |& tee runner.log || RUNNER_RET=$?
@@ -71,9 +70,10 @@ jobs:
           fi
           exit 0
       - name: Cache Docker Images
-        run: |
-          [[ -n "$(docker image ls -q)" ]] || exit 0
-          docker image save $(docker image ls --format '{{.Repository}}:{{.Tag}}' | grep -v '<none>') | gzip > actcache/docker_images.tar.gz
+        uses: ./.github/actions/docker-cache-save
+        with:
+          cache-key: docker-image-cache-${{ matrix.os }}
+          matched-key: ${{ steps.docker_cache_restore.outputs.cache-matched-key }}
       - name: Save Actions Cache
         uses: actions/cache/save@v4
         with:
