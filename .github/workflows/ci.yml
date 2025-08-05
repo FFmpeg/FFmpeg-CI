@@ -63,19 +63,24 @@ jobs:
         with:
           cache-key: docker-image-cache-${{ matrix.os }}
       - name: Run Runner
+        id: runner
         run: |
+          RUNNER_RET=0
           ./runner one-job -c config.yaml |& tee runner.log || RUNNER_RET=$?
+          echo "ret=$RUNNER_RET" >> $GITHUB_OUTPUT
           if [[ -n "$RUNNER_RET" ]] && ! grep -q "Error: could not fetch task" runner.log; then
             exit "$RUNNER_RET"
           fi
           exit 0
       - name: Cache Docker Images
         uses: ./.github/actions/docker-cache-save
+        if: ${{ steps.runner.outputs.ret == '0' }}
         with:
           cache-key: docker-image-cache-${{ matrix.os }}
           matched-key: ${{ steps.docker_cache_restore.outputs.cache-matched-key }}
       - name: Save Actions Cache
         uses: actions/cache/save@v4
+        if: ${{ steps.runner.outputs.ret == '0' }}
         with:
           key: act-cache-${{ matrix.os }}
           path: actcache
