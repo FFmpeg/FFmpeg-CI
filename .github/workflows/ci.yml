@@ -7,12 +7,12 @@ on:
         description: 'Number of x86_64 runners'
         required: true
         type: number
-        default: 3
+        default: 0
       aarch64_count:
         description: 'Number of aarch64 runners'
         required: true
         type: number
-        default: 3
+        default: 0
 
 defaults:
   run:
