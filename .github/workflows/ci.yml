@@ -2,20 +2,38 @@ name: CI Runner
 
 on:
   workflow_dispatch:
-  repository_dispatch:
-    types: [run_ci]
+    inputs:
+      x86_64_count:
+        description: 'Number of x86_64 runners'
+        required: true
+        type: number
+        default: 3
+      aarch64_count:
+        description: 'Number of aarch64 runners'
+        required: true
+        type: number
+        default: 3
 
 defaults:
   run:
     shell: bash
 
 jobs:
+  matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+    steps:
+      - id: matrix
+        run: |
+          X86=$(seq 1 "${{ github.event.inputs.x86_64_count }}" | jq -cs '[.[] | {"os":"ubuntu-latest", "runner_id":.}]')
+          ARM=$(seq 1 "${{ github.event.inputs.aarch64_count }}" | jq -cs '[.[] | {"os":"ubuntu-24.04-arm", "runner_id":.}]')
+          echo "matrix=$(jq -cn --argjson a "$X86" --argjson b "$ARM" '{include: ($a + $b)}')" >> $GITHUB_OUTPUT
   ci:
+    needs: matrix
     strategy:
       fail-fast: false
-      matrix:
-        os: [ubuntu-latest,ubuntu-24.04-arm]
-        runner_id: [1,2,3,4,5]
+      matrix: ${{ fromJSON(needs.matrix.outputs.matrix) }}
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
