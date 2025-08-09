@@ -85,11 +85,12 @@ jobs:
         id: runner
         run: |
           RUNNER_RET=0
-          ./runner one-job -c config.yaml |& tee runner.log || RUNNER_RET=$?
-          echo "ret=$RUNNER_RET" >> $GITHUB_OUTPUT
-          if [[ -n "$RUNNER_RET" ]] && ! grep -q "Error: could not fetch task" runner.log; then
-            exit "$RUNNER_RET"
-          fi
+          while [[ "$RUNNER_RET" == "0" ]]; do
+            ./runner one-job -c config.yaml |& tee runner.log || RUNNER_RET=$?
+            if [[ -n "$RUNNER_RET" ]] && ! grep -q "Error: could not fetch task" runner.log; then
+              exit "$RUNNER_RET"
+            fi
+          done
           exit 0
       - name: Cache Docker Images
         uses: ./.github/actions/docker-cache-save
