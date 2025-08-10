@@ -86,8 +86,8 @@ jobs:
         run: |
           RUNNER_RET=0
           while [[ "$RUNNER_RET" == "0" ]]; do
-            ./runner one-job -c config.yaml |& tee runner.log || RUNNER_RET=$?
-            if [[ -n "$RUNNER_RET" ]] && ! grep -q "Error: could not fetch task" runner.log; then
+            ./runner one-job -c config.yaml |& tee runner.log && RUNNER_RET=$? || RUNNER_RET=$?
+            if [[ "$RUNNER_RET" != "0" ]] && ! grep -q "Error: could not fetch task" runner.log; then
               exit "$RUNNER_RET"
             fi
           done
