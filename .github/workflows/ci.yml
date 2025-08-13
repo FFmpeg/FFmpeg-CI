@@ -36,6 +36,12 @@ jobs:
       matrix: ${{ fromJSON(needs.matrix.outputs.matrix) }}
     runs-on: ${{ matrix.os }}
     steps:
+      - name: Free up disk space
+        run: |
+          df -h
+          sudo rm -rf /opt/ghc /usr/local/.ghcup /usr/local/lib/android
+          docker system prune -a -f
+          df -h
       - name: Checkout
         uses: actions/checkout@v4
       - name: Get Runner Version
