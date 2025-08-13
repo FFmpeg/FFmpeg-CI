@@ -44,6 +44,9 @@ runs:
         done
         set -x
         docker image save $(docker image ls --format '{{.Repository}}:{{.Tag}}' | grep -v '<none>') | "$cmpr" > "$outf"
+    - name: Prune System
+      shell: bash
+      run: docker system prune -f
     - name: Get Docker Images Cache-Key
       id: docker_cache_key
       shell: bash
