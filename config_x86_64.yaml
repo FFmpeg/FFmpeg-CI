@@ -4,6 +4,7 @@ log:
 
 runner:
   file: .runner
+  env_file: .env
   capacity: 1
   timeout: 3h
   shutdown_timeout: 1h
@@ -16,7 +17,7 @@ cache:
   dir: actcache
 
 container:
-  network: ""
+  network: "runnernet"
   enable_ipv6: false
   privileged: false
   options:

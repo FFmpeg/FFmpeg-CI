@@ -1,0 +1,21 @@
+{
+    http_port 8080
+}
+
+http://:8080 {
+    log {
+        output stderr
+        format console
+        level INFO
+    }
+
+    rewrite * @@@REV_TARGET_PATH@@@{uri}
+    reverse_proxy * @@@REV_TARGET_BASE@@@ {
+        header_up Authorization "Bearer @@@BEARER_TOKEN@@@"
+
+        header_up Host {http.reverse_proxy.upstream.host}
+        header_up -X-Forwarded-For
+        header_up -X-Forwarded-Proto
+        header_up -X-Forwarded-Host
+    }
+}
