@@ -50,10 +50,12 @@ runs:
     - name: Get Docker Images Cache-Key
       id: docker_cache_key
       shell: bash
-      run: echo "key=$(docker image ls --format '{{.ID}} {{.Repository}}:{{.Tag}}' | grep -v '<none>' | cut -d' ' -f 1 | sort | sha1sum | cut -d' ' -f1)" >> $GITHUB_OUTPUT
+      run: |
+        echo "key=$(docker image ls --format '{{.ID}} {{.Repository}}:{{.Tag}}' | grep -v '<none>' | cut -d' ' -f 1 | sort | sha1sum | cut -d' ' -f1)" >> $GITHUB_OUTPUT
+        echo "have=$(docker image ls --format '{{.Repository}}:{{.Tag}}' | grep -v '<none>' >/dev/null 2>&1 && echo 1 || echo 0)" >> $GITHUB_OUTPUT
     - name: Save Docker Cache
       uses: actions/cache/save@v4
-      if: format('{0}-{1}', inputs.cache-key, steps.docker_cache_key.outputs.key) != inputs.matched-key
+      if: format('{0}-{1}', inputs.cache-key, steps.docker_cache_key.outputs.key) != inputs.matched-key && steps.docker_cache_key.outputs.have == '1'
       with:
         key: ${{ inputs.cache-key }}-${{ steps.docker_cache_key.outputs.key }}
         path: .
