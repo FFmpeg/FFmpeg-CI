@@ -9,7 +9,7 @@ runner:
   shutdown_timeout: 1h
   insecure: false
   fetch_timeout: 5s
-  labels: ["linux-amd64:docker://ghcr.io/btbn/ffmpeg-builds/base-linux64:latest"]
+  labels: ["linux-amd64:docker://ghcr.io/btbn/ffmpeg-builds/base:latest"]
 
 cache:
   enabled: true
