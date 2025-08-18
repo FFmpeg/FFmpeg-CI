@@ -37,6 +37,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Free up disk space
+        shell: bash -c "nohup bash -e {0} >/tmp/cleanup.log &"
         run: |
           df -h
           sudo rm -rf /opt/ghc /usr/local/.ghcup /usr/local/lib/android
@@ -113,3 +114,5 @@ jobs:
         with:
           key: act-cache-${{ matrix.os }}-${{ steps.cache_hash.outputs.hash }}
           path: actcache
+      - name: Cleanup result
+        run: cat /tmp/cleanup.log
