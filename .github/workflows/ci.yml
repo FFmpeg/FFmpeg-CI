@@ -40,8 +40,8 @@ jobs:
         shell: bash -c "nohup bash -e {0} >/tmp/cleanup.log &"
         run: |
           df -h
-          sudo rm -rf /opt/ghc /usr/local/.ghcup /usr/local/lib/android
           docker system prune -a -f
+          sudo rm -rf /opt/ghc /usr/local/.ghcup /usr/local/lib/android
           df -h
       - name: Checkout
         uses: actions/checkout@v4
