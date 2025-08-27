@@ -79,10 +79,10 @@ jobs:
         id: act_cache
         uses: actions/cache/restore@v4
         with:
-          key: act-cache-${{ matrix.os }}
-          path: actcache
+          key: act-ck-cache-${{ matrix.os }}
+          path: act
           restore-keys: |
-            act-cache-${{ matrix.os }}-
+            act-ck-cache-${{ matrix.os }}-
       - name: Restore Docker Images
         id: docker_cache_restore
         uses: ./.github/actions/docker-cache-restore
@@ -116,13 +116,13 @@ jobs:
       - name: Calculate Cache Hash
         id: cache_hash
         run: |
-          echo "hash=$(find actcache -type f -print0 | sort -z | xargs -0 sha1sum | sha1sum | cut -d' ' -f1)" >> $GITHUB_OUTPUT
+          echo "hash=$(find act -type f -print0 | sort -z | xargs -0 sha1sum | sha1sum | cut -d' ' -f1)" >> $GITHUB_OUTPUT
       - name: Save Actions Cache
         uses: actions/cache/save@v4
         if: ${{ format('act-cache-{0}-{1}', matrix.os, steps.cache_hash.outputs.hash) != steps.act_cache.outputs.cache-matched-key }}
         with:
-          key: act-cache-${{ matrix.os }}-${{ steps.cache_hash.outputs.hash }}
-          path: actcache
+          key: act-ck-cache-${{ matrix.os }}-${{ steps.cache_hash.outputs.hash }}
+          path: act
       - name: Cleanup result
         run: cat /tmp/cleanup.log
       - name: Result output

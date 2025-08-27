@@ -16,6 +16,9 @@ cache:
   enabled: true
   dir: actcache
 
+host:
+  workdir_parent: act
+
 container:
   network: "runnernet"
   enable_ipv6: false
