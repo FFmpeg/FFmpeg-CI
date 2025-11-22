@@ -1,6 +1,6 @@
 log:
-  level: debug
-  job_level: debug
+  level: info
+  job_level: info
 
 runner:
   file: .runner
