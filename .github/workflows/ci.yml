@@ -79,10 +79,14 @@ jobs:
         id: act_cache
         uses: actions/cache/restore@v4
         with:
-          key: act-ck-cache-${{ matrix.os }}
-          path: act
+          key: act-ck-cache2-${{ matrix.os }}
+          path: /var/act
           restore-keys: |
-            act-ck-cache-${{ matrix.os }}-
+            act-ck-cache2-${{ matrix.os }}-
+      - name: Set cache permissions
+        run: |
+          sudo mkdir -p /var/act /var/actcache
+          sudo chown -R $(id -u):$(id -g) /var/act /var/actcache
       - name: Restore Docker Images
         id: docker_cache_restore
         uses: ./.github/actions/docker-cache-restore

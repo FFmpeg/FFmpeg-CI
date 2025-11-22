@@ -14,10 +14,10 @@ runner:
 
 cache:
   enabled: true
-  dir: actcache
+  dir: /var/actcache
 
 host:
-  workdir_parent: act
+  workdir_parent: /var/act
 
 container:
   network: "runnernet"
