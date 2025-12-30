@@ -167,6 +167,10 @@ jobs:
         with:
           key: fj-runner-${{ matrix.os }}-${{ needs.matrix.outputs.runner_version }}
           path: runner.exe
+      - uses: actions/setup-go@v6
+        if: ${{ steps.cache_runner.outputs.cache-hit != 'true' }}
+        with:
+          go-version: 'stable'
       - name: Build Runner
         if: ${{ steps.cache_runner.outputs.cache-hit != 'true' }}
         run: |
@@ -189,6 +193,10 @@ jobs:
         with:
           key: fj-runner-${{ matrix.os }}-${{ needs.matrix.outputs.runner_version }}
           path: runner
+      - uses: actions/setup-go@v6
+        if: ${{ steps.cache_runner.outputs.cache-hit != 'true' }}
+        with:
+          go-version: 'stable'
       - name: Build Runner
         if: ${{ steps.cache_runner.outputs.cache-hit != 'true' }}
         run: |
