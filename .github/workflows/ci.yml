@@ -36,6 +36,7 @@ jobs:
       matrix_win: ${{ steps.matrix.outputs.matrix_win }}
       matrix_osx: ${{ steps.matrix.outputs.matrix_osx }}
       runner_version: ${{ steps.runner.outputs.version }}
+      runner_version_major: ${{ steps.runner.outputs.version_major }}
     steps:
       - name: Calculate Matrix
         id: matrix
@@ -52,6 +53,7 @@ jobs:
         run: |
           VER="$(curl -s https://code.forgejo.org/api/v1/repos/forgejo/runner/releases/latest | jq .name -r | cut -c 2-)"
           echo "version=$VER" >> $GITHUB_OUTPUT
+          echo "version_major=${VER/.*/}" >> $GITHUB_OUTPUT
   ci:
     needs: matrix
     strategy:
@@ -176,8 +178,7 @@ jobs:
         run: |
           git clone --depth=1 --branch="v${{ needs.matrix.outputs.runner_version }}" https://code.forgejo.org/forgejo/runner.git runner-build
           cd runner-build
-          make -j$(nproc) build OS=Windows GO="$(which go)"
-          mv forgejo-runner.exe ../runner.exe
+          go build -v -buildmode=exe -tags 'netgo osusergo' -ldflags '-extldflags "-static" -s -w -X "code.forgejo.org/forgejo/runner/v${{ needs.matrix.outputs.runner_version_major }}/internal/pkg/ver.version=v${{ needs.matrix.outputs.runner_version }}"' -o ../runner.exe
           cd ..
           rm -rf runner-build
   osxci:
