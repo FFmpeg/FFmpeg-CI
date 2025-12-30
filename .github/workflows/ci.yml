@@ -174,10 +174,12 @@ jobs:
       - name: Build Runner
         if: ${{ steps.cache_runner.outputs.cache-hit != 'true' }}
         run: |
-          git clone --depth=1 --branch="v${{ needs.matrix.outputs.runner_version }}" https://code.forgejo.org/forgejo/runner.git runner
-          cd runner
-          make -j$(nproc) build
-          exit 1
+          git clone --depth=1 --branch="v${{ needs.matrix.outputs.runner_version }}" https://code.forgejo.org/forgejo/runner.git runner-build
+          cd runner-build
+          make -j$(nproc) build GO="$(which go)"
+          mv forgejo-runner.exe ../runner.exe
+          cd ..
+          rm -rf runner-build
   osxci:
     needs: matrix
     strategy:
@@ -200,7 +202,9 @@ jobs:
       - name: Build Runner
         if: ${{ steps.cache_runner.outputs.cache-hit != 'true' }}
         run: |
-          git clone --depth=1 --branch="v${{ needs.matrix.outputs.runner_version }}" https://code.forgejo.org/forgejo/runner.git runner
-          cd runner
+          git clone --depth=1 --branch="v${{ needs.matrix.outputs.runner_version }}" https://code.forgejo.org/forgejo/runner.git runner-build
+          cd runner-build
           make -j$(nproc) build
-          exit 1
+          mv forgejo-runner ../runner
+          cd ..
+          rm -rf runner-build
