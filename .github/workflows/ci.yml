@@ -35,6 +35,9 @@ jobs:
       matrix: ${{ steps.matrix.outputs.matrix }}
       matrix_win: ${{ steps.matrix.outputs.matrix_win }}
       matrix_osx: ${{ steps.matrix.outputs.matrix_osx }}
+      matrix_count: ${{ steps.matrix.outputs.matrix_count }}
+      matrix_win_count: ${{ steps.matrix.outputs.matrix_win_count }}
+      matrix_osx_count: ${{ steps.matrix.outputs.matrix_osx_count }}
       runner_version: ${{ steps.runner.outputs.version }}
       runner_version_major: ${{ steps.runner.outputs.version_major }}
     steps:
@@ -44,10 +47,13 @@ jobs:
           X86=$(seq 1 "${{ github.event.inputs.x86_64_count }}" | jq -cs '[.[] | {"os":"ubuntu-latest", "runner_id":.}]')
           ARM=$(seq 1 "${{ github.event.inputs.aarch64_count }}" | jq -cs '[.[] | {"os":"ubuntu-24.04-arm", "runner_id":.}]')
           echo "matrix=$(jq -cn --argjson a "$X86" --argjson b "$ARM" '{include: ($a + $b)}')" >> $GITHUB_OUTPUT
+          echo "matrix_count=$(( ${{ github.event.inputs.x86_64_count }} + ${{ github.event.inputs.aarch64_count }} ))" >> $GITHUB_OUTPUT
           WINX86=$(seq 1 "${{ github.event.inputs.win_x86_64_count }}" | jq -cs '[.[] | {"os":"windows-latest", "runner_id":.}]')
           echo "matrix_win=$(jq -cn --argjson a "$WINX86" '{include: ($a)}')" >> $GITHUB_OUTPUT
+          echo "matrix_win_count=$(( ${{ github.event.inputs.win_x86_64_count }} ))" >> $GITHUB_OUTPUT
           OSX=$(seq 1 "${{ github.event.inputs.osx_count }}" | jq -cs '[.[] | {"os":"macos-latest", "runner_id":.}]')
           echo "matrix_osx=$(jq -cn --argjson a "$OSX" '{include: ($a)}')" >> $GITHUB_OUTPUT
+          echo "matrix_osx_count=$(( ${{ github.event.inputs.osx_count }} ))" >> $GITHUB_OUTPUT
       - name: Get Runner Version
         id: runner
         run: |
@@ -60,6 +66,7 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJSON(needs.matrix.outputs.matrix) }}
     runs-on: ${{ matrix.os }}
+    if: ${{ needs.matrix.outputs.matrix_count > 0 }}
     steps:
       - name: Free up disk space
         shell: bash -c "nohup bash -e {0} >/tmp/cleanup.log &"
@@ -160,6 +167,7 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJSON(needs.matrix.outputs.matrix_win) }}
     runs-on: ${{ matrix.os }}
+    if: ${{ needs.matrix.outputs.matrix_win_count > 0 }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -187,6 +195,7 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJSON(needs.matrix.outputs.matrix_osx) }}
     runs-on: ${{ matrix.os }}
+    if: ${{ needs.matrix.outputs.matrix_osx_count > 0 }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
