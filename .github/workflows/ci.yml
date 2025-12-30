@@ -176,7 +176,7 @@ jobs:
         run: |
           git clone --depth=1 --branch="v${{ needs.matrix.outputs.runner_version }}" https://code.forgejo.org/forgejo/runner.git runner-build
           cd runner-build
-          make -j$(nproc) build GO="$(which go)"
+          make -j$(nproc) build OS=Windows GO="$(which go)"
           mv forgejo-runner.exe ../runner.exe
           cd ..
           rm -rf runner-build
