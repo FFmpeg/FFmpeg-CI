@@ -1,3 +1,4 @@
+---
 # RISC-V CI runner configuration
 #
 # Host platform: linux/amd64
@@ -49,4 +50,3 @@ container:
   privileged: false
   force_pull: true
   force_rebuild: false
-
