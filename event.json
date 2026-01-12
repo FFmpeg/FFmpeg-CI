@@ -1,0 +1,9 @@
+{
+  "inputs": {
+    "x86_64_count": "0",
+    "riscv64_count": "1",
+    "aarch64_count": "0",
+    "win_x86_64_count": "0",
+    "osx_count": "0"
+  }
+}

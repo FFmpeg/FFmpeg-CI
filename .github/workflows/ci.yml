@@ -106,7 +106,8 @@ jobs:
           chmod +x runner
       - name: Register Runner
         run: |
-          if [[ "${{ matrix.riscv }}" == "true" ]]; then
+          #if [[ "${{ matrix.riscv }}" == "true" ]]; then
+          if [[ "${{ matrix.riscv || false }}" == "true" ]]; then  
             printf '%s\n' '${{ secrets.RUNNER_REGISTRATION_X86_64 }}' > .runner
             mv config_riscv64.yaml config.yaml
           elif [[ "$(uname -m)" == "aarch64" ]]; then
@@ -136,6 +137,7 @@ jobs:
       - name: Get Internal Env-Vars
         uses: crazy-max/ghaction-github-runtime@v3
       - name: Start Cacheproxy
+        if: ${{ !env.ACT }}
         run: |
           ./cacheproxy/genconfig.sh
           docker network create runnernet
