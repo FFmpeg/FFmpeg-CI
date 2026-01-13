@@ -145,6 +145,7 @@ jobs:
           echo "ACTIONS_CACHE_URL_V2=http://cacheproxy:8080/" >> .env
           echo "ACTIONS_CACHE_SERVICE_V2=1" >> .env
       - name: Run Runner
+        if: ${{ !env.ACT }}
         id: runner
         run: |
           RUNNER_RET=0
