@@ -23,6 +23,11 @@ on:
         required: true
         type: number
         default: 0
+      riscv64_count:
+        description: 'Number of riscv64 (QEMU) runners'
+        required: true
+        type: number
+        default: 0
 
 defaults:
   run:
@@ -46,8 +51,14 @@ jobs:
         run: |
           X86=$(seq 1 "${{ github.event.inputs.x86_64_count }}" | jq -cs '[.[] | {"os":"ubuntu-latest", "runner_id":.}]')
           ARM=$(seq 1 "${{ github.event.inputs.aarch64_count }}" | jq -cs '[.[] | {"os":"ubuntu-24.04-arm", "runner_id":.}]')
-          echo "matrix=$(jq -cn --argjson a "$X86" --argjson b "$ARM" '{include: ($a + $b)}')" >> $GITHUB_OUTPUT
-          echo "matrix_count=$(( ${{ github.event.inputs.x86_64_count }} + ${{ github.event.inputs.aarch64_count }} ))" >> $GITHUB_OUTPUT
+          RISCV=$(seq 1 "${{ github.event.inputs.riscv64_count }}" | jq -cs '[.[] | {"os":"ubuntu-latest", "runner_id":., "riscv":true}]')
+          #echo "matrix=$(jq -cn --argjson a "$X86" --argjson b "$ARM" '{include: ($a + $b)}')" >> $GITHUB_OUTPUT
+          #echo "matrix_count=$(( ${{ github.event.inputs.x86_64_count }} + ${{ github.event.inputs.aarch64_count }} ))" >> $GITHUB_OUTPUT
+          echo "matrix=$(jq -cn --argjson a "$X86" --argjson b "$ARM" --argjson c "$RISCV" '{include: ($a + $b + $c)}')" >> $GITHUB_OUTPUT
+          echo "matrix_count=$(( \
+                  ${{ github.event.inputs.x86_64_count }} + \
+                  ${{ github.event.inputs.aarch64_count }} + \
+                  ${{ github.event.inputs.riscv64_count }} ))" >> $GITHUB_OUTPUT
           WINX86=$(seq 1 "${{ github.event.inputs.win_x86_64_count }}" | jq -cs '[.[] | {"os":"windows-latest", "runner_id":.}]')
           echo "matrix_win=$(jq -cn --argjson a "$WINX86" '{include: ($a)}')" >> $GITHUB_OUTPUT
           echo "matrix_win_count=$(( ${{ github.event.inputs.win_x86_64_count }} ))" >> $GITHUB_OUTPUT
@@ -95,7 +106,11 @@ jobs:
           chmod +x runner
       - name: Register Runner
         run: |
-          if [[ "$(uname -m)" == "aarch64" ]]; then
+          #if [[ "${{ matrix.riscv }}" == "true" ]]; then
+          if [[ "${{ matrix.riscv || false }}" == "true" ]]; then  
+            printf '%s\n' '${{ secrets.RUNNER_REGISTRATION_X86_64 }}' > .runner
+            mv config_riscv64.yaml config.yaml
+          elif [[ "$(uname -m)" == "aarch64" ]]; then
             printf '%s\n' '${{ secrets.RUNNER_REGISTRATION_AARCH64 }}' > .runner
             mv config_aarch64.yaml config.yaml
           else
@@ -122,6 +137,7 @@ jobs:
       - name: Get Internal Env-Vars
         uses: crazy-max/ghaction-github-runtime@v3
       - name: Start Cacheproxy
+        if: ${{ !env.ACT }}
         run: |
           ./cacheproxy/genconfig.sh
           docker network create runnernet
@@ -129,6 +145,7 @@ jobs:
           echo "ACTIONS_CACHE_URL_V2=http://cacheproxy:8080/" >> .env
           echo "ACTIONS_CACHE_SERVICE_V2=1" >> .env
       - name: Run Runner
+        if: ${{ !env.ACT }}
         id: runner
         run: |
           RUNNER_RET=0

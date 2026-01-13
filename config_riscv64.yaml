@@ -1,0 +1,52 @@
+---
+# RISC-V CI runner configuration
+#
+# Host platform: linux/amd64
+# Target platform: linux/riscv64 (emulated)
+#
+# Purpose:
+# - Enable RISC-V (riscv64) CI builds on x86_64 hosts
+# - Uses Docker + cross-compilation + QEMU (no native RISC-V hardware required)
+#
+# How it works:
+# - Runner executes inside an amd64 Docker container
+# - RISC-V binaries are cross-compiled using riscv64-linux-gnu toolchain
+# - Smoke tests are executed using qemu-riscv64
+#
+# Docker image:
+# - while1skothadiya/ffmpeg-riscv-docker:latest
+#   (contains toolchain, QEMU, and a statically-built FFmpeg)
+# - FFmpeg binary is statically linked to avoid runtime loader dependencies
+# Notes:
+# - This runner is NOT a native RISC-V environment
+# - Label "linux-riscv64" is logical and used for job routing only
+# - Privileged mode and host binfmt are intentionally avoided
+
+log:
+  level: info
+  job_level: info
+
+runner:
+  file: .runner
+  env_file: .env
+  capacity: 1
+  timeout: 3h
+  shutdown_timeout: 1h
+  insecure: false
+  fetch_timeout: 5s
+  labels:
+    - "linux-riscv64:docker://while1skothadiya/ffmpeg-riscv-docker:latest"
+
+cache:
+  enabled: true
+  dir: /var/actcache
+
+host:
+  workdir_parent: /var/act
+
+container:
+  network: "runnernet"
+  enable_ipv6: false
+  privileged: false
+  force_pull: true
+  force_rebuild: false
