@@ -120,7 +120,7 @@ jobs:
         with:
           cache-key: docker-image-cache-${{ matrix.os }}
       - name: Get Internal Env-Vars
-        uses: crazy-max/ghaction-github-runtime@v3
+        uses: crazy-max/ghaction-github-runtime@v4
       - name: Start Cacheproxy
         run: |
           ./cacheproxy/genconfig.sh
