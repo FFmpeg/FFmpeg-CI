@@ -45,7 +45,7 @@ runs:
         "$cmpr" -d < "$outf" | docker image load
     - name: Restore Docker Cache
       id: docker_cache_restore
-      uses: actions/cache/restore@v4
+      uses: actions/cache/restore@v5
       with:
         key: ${{ inputs.cache-key }}
         path: .
