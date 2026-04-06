@@ -134,8 +134,10 @@ jobs:
           RUNNER_RET=0
           while [[ "$RUNNER_RET" == "0" ]]; do
             ./runner one-job -c config.yaml |& tee runner.log && RUNNER_RET=$? || RUNNER_RET=$?
-            if [[ "$RUNNER_RET" != "0" ]] && ! grep -q "Error: could not fetch task" runner.log; then
+            if [[ "$RUNNER_RET" != "0" ]] && ! grep -q "received no task" runner.log; then
               exit "$RUNNER_RET"
+            elif grep -q "received no task" runner.log; then
+              exit 0
             fi
           done
           exit 0
