@@ -134,10 +134,11 @@ jobs:
           RUNNER_RET=0
           while [[ "$RUNNER_RET" == "0" ]]; do
             ./runner one-job -c config.yaml |& tee runner.log && RUNNER_RET=$? || RUNNER_RET=$?
-            if [[ "$RUNNER_RET" != "0" ]] && ! grep -q "received no task" runner.log; then
-              exit "$RUNNER_RET"
-            elif grep -q "received no task" runner.log; then
+            if [[ "$RUNNER_RET" == "2" ]] then
+              # No Jobs left
               exit 0
+            elif [[ "$RUNNER_RET" != "0" ]] then
+              exit "$RUNNER_RET"
             fi
           done
           exit 0
