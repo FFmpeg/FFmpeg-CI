@@ -192,8 +192,21 @@ jobs:
           runner-version: ${{ needs.matrix.outputs.runner_version }}
       - name: Register Runner
         run: echo '${{ matrix.reg_file }}' | base64 -d > .runner
+      - name: Get Internal Env-Vars
+        uses: crazy-max/ghaction-github-runtime@v4
+      - name: Setup Caddy
+        uses: ./.github/actions/setup-caddy
+      - name: Start Cacheproxy
+        run: |
+          ./cacheproxy/genconfig.sh
+          ./caddy.exe start --config ./cacheproxy/Caddyfile
+          echo "ACTIONS_CACHE_URL_V2=http://localhost:8080/" >> .env
+          echo "ACTIONS_CACHE_SERVICE_V2=1" >> .env
       - name: Run Runner
         run: ./runner.exe one-job -c config_win64.yaml
+      - name: Stop Caddy
+        if: always()
+        run: ./caddy.exe stop || true
   osxci:
     needs: matrix
     name: osxci (${{ matrix.runner_id }})
@@ -211,5 +224,18 @@ jobs:
           runner-version: ${{ needs.matrix.outputs.runner_version }}
       - name: Register Runner
         run: echo '${{ matrix.reg_file }}' | base64 -d > .runner
+      - name: Get Internal Env-Vars
+        uses: crazy-max/ghaction-github-runtime@v4
+      - name: Setup Caddy
+        uses: ./.github/actions/setup-caddy
+      - name: Start Cacheproxy
+        run: |
+          ./cacheproxy/genconfig.sh
+          ./caddy start --config ./cacheproxy/Caddyfile
+          echo "ACTIONS_CACHE_URL_V2=http://localhost:8080/" >> .env
+          echo "ACTIONS_CACHE_SERVICE_V2=1" >> .env
       - name: Run Runner
         run: ./runner one-job -c config_osx.yaml
+      - name: Stop Caddy
+        if: always()
+        run: ./caddy stop || true

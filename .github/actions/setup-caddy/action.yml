@@ -1,0 +1,39 @@
+name: 'Setup Caddy'
+description: 'Download and cache the Caddy web server'
+
+runs:
+  using: composite
+  steps:
+    - name: Get Caddy Version
+      id: version
+      shell: bash
+      run: echo "version=$(curl -s https://api.github.com/repos/caddyserver/caddy/releases/latest | jq -r .tag_name)" >> $GITHUB_OUTPUT
+    - name: Cache Caddy
+      id: cache_caddy
+      uses: actions/cache@v5
+      with:
+        key: caddy-${{ runner.os }}-${{ runner.arch }}-${{ steps.version.outputs.version }}
+        path: |
+          caddy
+          caddy.exe
+    - name: Download Caddy
+      if: steps.cache_caddy.outputs.cache-hit != 'true'
+      shell: bash
+      env:
+        RUNNER_OS: ${{ runner.os }}
+        RUNNER_ARCH: ${{ runner.arch }}
+      run: |
+        case "$RUNNER_OS" in
+          Linux)  OS="linux"  ;;
+          macOS)  OS="darwin" ;;
+          Windows) OS="windows" ;;
+        esac
+        case "$RUNNER_ARCH" in
+          X64)   ARCH="amd64" ;;
+          ARM64) ARCH="arm64" ;;
+        esac
+        if [[ "$OS" == "windows" ]]; then
+          EXT=".exe"
+        fi
+        curl -Ls "https://caddyserver.com/api/download?os=${OS}&arch=${ARCH}" -o "caddy${EXT}"
+        chmod +x "caddy${EXT}"

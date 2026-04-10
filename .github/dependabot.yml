@@ -16,3 +16,7 @@ updates:
     directory: ".github/actions/docker-cache-save"
     schedule:
       interval: "weekly"
+  - package-ecosystem: "github-actions"
+    directory: ".github/actions/setup-caddy"
+    schedule:
+      interval: "weekly"
