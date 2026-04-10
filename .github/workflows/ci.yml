@@ -177,6 +177,7 @@ jobs:
           docker logs cacheproxy
   winci:
     needs: matrix
+    name: winci (${{ matrix.runner_id }})
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.matrix.outputs.matrix_win) }}
@@ -191,6 +192,7 @@ jobs:
           runner-version: ${{ needs.matrix.outputs.runner_version }}
   osxci:
     needs: matrix
+    name: osxci (${{ matrix.runner_id }})
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.matrix.outputs.matrix_osx) }}
