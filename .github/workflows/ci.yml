@@ -39,25 +39,18 @@ jobs:
       matrix_win_count: ${{ steps.matrix.outputs.matrix_win_count }}
       matrix_osx_count: ${{ steps.matrix.outputs.matrix_osx_count }}
       runner_version: ${{ steps.runner.outputs.version }}
-      runner_version_major: ${{ steps.runner.outputs.version_major }}
     steps:
       - name: Get Runner Version
         id: runner
         run: |
           VER="$(curl -s https://code.forgejo.org/api/v1/repos/forgejo/runner/releases/latest | jq .name -r | cut -c 2-)"
           echo "version=$VER" >> $GITHUB_OUTPUT
-          echo "version_major=${VER/.*/}" >> $GITHUB_OUTPUT
-      - name: Cache Runner
-        id: cache_runner
-        uses: actions/cache@v5
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Setup Runner
+        uses: ./.github/actions/setup-runner
         with:
-          key: fj-runner-ubuntu-latest-${{ steps.runner.outputs.version }}
-          path: runner
-      - name: Download Runner
-        if: ${{ steps.cache_runner.outputs.cache-hit != 'true' }}
-        run: |
-          curl -Ls "https://code.forgejo.org/forgejo/runner/releases/download/v${{ steps.runner.outputs.version }}/forgejo-runner-${{ steps.runner.outputs.version }}-linux-amd64.xz" | unxz > runner
-          chmod +x runner
+          runner-version: ${{ steps.runner.outputs.version }}
       - name: Register ephemeral runners
         id: eph_reg
         run: |
@@ -107,22 +100,10 @@ jobs:
           df -h
       - name: Checkout
         uses: actions/checkout@v6
-      - name: Cache Runner
-        id: cache_runner
-        uses: actions/cache@v5
+      - name: Setup Runner
+        uses: ./.github/actions/setup-runner
         with:
-          key: fj-runner-${{ matrix.os }}-${{ needs.matrix.outputs.runner_version }}
-          path: runner
-      - name: Download Runner
-        if: ${{ steps.cache_runner.outputs.cache-hit != 'true' }}
-        run: |
-          if [[ "$(uname -m)" == "aarch64" ]]; then
-            RUNNERARCH="arm64"
-          else
-            RUNNERARCH="amd64"
-          fi
-          curl -Ls "https://code.forgejo.org/forgejo/runner/releases/download/v${{ needs.matrix.outputs.runner_version }}/forgejo-runner-${{ needs.matrix.outputs.runner_version }}-linux-${RUNNERARCH}.xz" | unxz > runner
-          chmod +x runner
+          runner-version: ${{ needs.matrix.outputs.runner_version }}
       - name: Register Runner
         run: |
           if [[ "$(uname -m)" == "aarch64" ]]; then
@@ -204,24 +185,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-      - name: Cache Runner
-        id: cache_runner
-        uses: actions/cache@v5
+      - name: Setup Runner
+        uses: ./.github/actions/setup-runner
         with:
-          key: fj-runner-${{ matrix.os }}-${{ needs.matrix.outputs.runner_version }}
-          path: runner.exe
-      - uses: actions/setup-go@v6
-        if: ${{ steps.cache_runner.outputs.cache-hit != 'true' }}
-        with:
-          go-version: 'stable'
-      - name: Build Runner
-        if: ${{ steps.cache_runner.outputs.cache-hit != 'true' }}
-        run: |
-          git clone --depth=1 --branch="v${{ needs.matrix.outputs.runner_version }}" https://code.forgejo.org/forgejo/runner.git runner-build
-          cd runner-build
-          go build -v -buildmode=exe -tags 'netgo osusergo' -ldflags '-extldflags "-static" -s -w -X "code.forgejo.org/forgejo/runner/v${{ needs.matrix.outputs.runner_version_major }}/internal/pkg/ver.version=v${{ needs.matrix.outputs.runner_version }}"' -o ../runner.exe
-          cd ..
-          rm -rf runner-build
+          runner-version: ${{ needs.matrix.outputs.runner_version }}
   osxci:
     needs: matrix
     strategy:
@@ -232,22 +199,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-      - name: Cache Runner
-        id: cache_runner
-        uses: actions/cache@v5
+      - name: Setup Runner
+        uses: ./.github/actions/setup-runner
         with:
-          key: fj-runner-${{ matrix.os }}-${{ needs.matrix.outputs.runner_version }}
-          path: runner
-      - uses: actions/setup-go@v6
-        if: ${{ steps.cache_runner.outputs.cache-hit != 'true' }}
-        with:
-          go-version: 'stable'
-      - name: Build Runner
-        if: ${{ steps.cache_runner.outputs.cache-hit != 'true' }}
-        run: |
-          git clone --depth=1 --branch="v${{ needs.matrix.outputs.runner_version }}" https://code.forgejo.org/forgejo/runner.git runner-build
-          cd runner-build
-          make -j$(nproc) build
-          mv forgejo-runner ../runner
-          cd ..
-          rm -rf runner-build
+          runner-version: ${{ needs.matrix.outputs.runner_version }}

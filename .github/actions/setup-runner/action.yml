@@ -1,0 +1,56 @@
+name: 'Setup Forgejo Runner'
+description: 'Download or build the Forgejo runner'
+
+inputs:
+  runner-version:
+    description: 'Forgejo runner version to download/build'
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Cache Runner
+      id: cache_runner
+      uses: actions/cache@v5
+      with:
+        key: fj-runner-${{ runner.os }}-${{ runner.arch }}-${{ inputs.runner-version }}
+        path: |
+          runner
+          runner.exe
+    - name: Download Runner
+      if: runner.os == 'Linux' && steps.cache_runner.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        if [[ "${{ runner.arch }}" == "ARM64" ]]; then
+          RUNNERARCH="arm64"
+        else
+          RUNNERARCH="amd64"
+        fi
+        curl -Ls "https://code.forgejo.org/forgejo/runner/releases/download/v${{ inputs.runner-version }}/forgejo-runner-${{ inputs.runner-version }}-linux-${RUNNERARCH}.xz" | unxz > runner
+        chmod +x runner
+    - name: Setup Go
+      if: runner.os != 'Linux' && steps.cache_runner.outputs.cache-hit != 'true'
+      uses: actions/setup-go@v6
+      with:
+        go-version: 'stable'
+    - name: Build Runner
+      if: runner.os == 'Windows' && steps.cache_runner.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        VER="${{ inputs.runner-version }}"
+        VER_MAJOR="${VER%%.*}"
+        git clone --depth=1 --branch="v${VER}" https://code.forgejo.org/forgejo/runner.git runner-build
+        cd runner-build
+        go build -v -buildmode=exe -tags 'netgo osusergo' -ldflags '-extldflags "-static" -s -w -X "code.forgejo.org/forgejo/runner/v'"$VER_MAJOR"'/internal/pkg/ver.version=v'"$VER"'"' -o ../runner.exe
+        cd ..
+        rm -rf runner-build
+    - name: Build Runner
+      if: runner.os == 'macOS' && steps.cache_runner.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        git clone --depth=1 --branch="v${{ inputs.runner-version }}" https://code.forgejo.org/forgejo/runner.git runner-build
+        cd runner-build
+        make -j$(nproc) build
+        mv forgejo-runner ../runner
+        cd ..
+        rm -rf runner-build
