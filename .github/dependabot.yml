@@ -4,3 +4,15 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+  - package-ecosystem: "github-actions"
+    directory: ".github/actions/setup-runner"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "github-actions"
+    directory: ".github/actions/docker-cache-restore"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "github-actions"
+    directory: ".github/actions/docker-cache-save"
+    schedule:
+      interval: "weekly"
