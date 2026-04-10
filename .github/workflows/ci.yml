@@ -41,6 +41,42 @@ jobs:
       runner_version: ${{ steps.runner.outputs.version }}
       runner_version_major: ${{ steps.runner.outputs.version_major }}
     steps:
+      - name: Get Runner Version
+        id: runner
+        run: |
+          VER="$(curl -s https://code.forgejo.org/api/v1/repos/forgejo/runner/releases/latest | jq .name -r | cut -c 2-)"
+          echo "version=$VER" >> $GITHUB_OUTPUT
+          echo "version_major=${VER/.*/}" >> $GITHUB_OUTPUT
+      - name: Cache Runner
+        id: cache_runner
+        uses: actions/cache@v5
+        with:
+          key: fj-runner-ubuntu-latest-${{ steps.runner.outputs.version }}
+          path: runner
+      - name: Download Runner
+        if: ${{ steps.cache_runner.outputs.cache-hit != 'true' }}
+        run: |
+          curl -Ls "https://code.forgejo.org/forgejo/runner/releases/download/v${{ steps.runner.outputs.version }}/forgejo-runner-${{ steps.runner.outputs.version }}-linux-amd64.xz" | unxz > runner
+          chmod +x runner
+      - name: Register ephemeral runners
+        id: eph_reg
+        run: |
+          REG_WIN64=()
+          for i in $(seq 1 "${{ github.event.inputs.win_x86_64_count }}"); do
+            rm -f .runner
+            ./runner register --no-interactive --instance "https://code.ffmpeg.org/" --ephemeral --name "gh-eph-win64" --labels "gh-win64" --token "${{ secrets.RUNNER_REGISTRATION_TOKEN }}"
+            REG_WIN64+=( "$(base64 -w0 .runner)" )
+          done
+          printf -v REG_LIST_WIN64 '"%s",' "${REG_WIN64[@]}"
+          echo "eph_reg_win64=[${REG_LIST_WIN64%,}]" >> $GITHUB_OUTPUT
+          REG_OSX=()
+          for i in $(seq 1 "${{ github.event.inputs.osx_count }}"); do
+            rm -f .runner
+            ./runner register --no-interactive --instance "https://code.ffmpeg.org/" --ephemeral --name "gh-eph-osx" --labels "gh-osx" --token "${{ secrets.RUNNER_REGISTRATION_TOKEN }}"
+            REG_OSX+=( "$(base64 -w0 .runner)" )
+          done
+          printf -v REG_LIST_OSX '"%s",' "${REG_OSX[@]}"
+          echo "eph_reg_osx=[${REG_LIST_OSX%,}]" >> $GITHUB_OUTPUT
       - name: Calculate Matrix
         id: matrix
         run: |
@@ -48,18 +84,12 @@ jobs:
           ARM=$(seq 1 "${{ github.event.inputs.aarch64_count }}" | jq -cs '[.[] | {"os":"ubuntu-24.04-arm", "runner_id":.}]')
           echo "matrix=$(jq -cn --argjson a "$X86" --argjson b "$ARM" '{include: ($a + $b)}')" >> $GITHUB_OUTPUT
           echo "matrix_count=$(( ${{ github.event.inputs.x86_64_count }} + ${{ github.event.inputs.aarch64_count }} ))" >> $GITHUB_OUTPUT
-          WINX86=$(seq 1 "${{ github.event.inputs.win_x86_64_count }}" | jq -cs '[.[] | {"os":"windows-latest", "runner_id":.}]')
+          WINX86=$(jq -cn --argjson c '${{ github.event.inputs.win_x86_64_count }}' --argjson r '${{ steps.eph_reg.outputs.eph_reg_win64 }}' '[range(1; $c+1) as $i | {"os":"windows-latest", "runner_id":$i, "reg_file":$r[$i-1]}]')
           echo "matrix_win=$(jq -cn --argjson a "$WINX86" '{include: ($a)}')" >> $GITHUB_OUTPUT
-          echo "matrix_win_count=$(( ${{ github.event.inputs.win_x86_64_count }} ))" >> $GITHUB_OUTPUT
-          OSX=$(seq 1 "${{ github.event.inputs.osx_count }}" | jq -cs '[.[] | {"os":"macos-latest", "runner_id":.}]')
+          echo "matrix_win_count=${{ github.event.inputs.win_x86_64_count }}" >> $GITHUB_OUTPUT
+          OSX=$(jq -cn --argjson c '${{ github.event.inputs.osx_count }}' --argjson r '${{ steps.eph_reg.outputs.eph_reg_osx }}' '[range(1; $c+1) as $i | {"os":"macos-latest", "runner_id":$i, "reg_file":$r[$i-1]}]')
           echo "matrix_osx=$(jq -cn --argjson a "$OSX" '{include: ($a)}')" >> $GITHUB_OUTPUT
-          echo "matrix_osx_count=$(( ${{ github.event.inputs.osx_count }} ))" >> $GITHUB_OUTPUT
-      - name: Get Runner Version
-        id: runner
-        run: |
-          VER="$(curl -s https://code.forgejo.org/api/v1/repos/forgejo/runner/releases/latest | jq .name -r | cut -c 2-)"
-          echo "version=$VER" >> $GITHUB_OUTPUT
-          echo "version_major=${VER/.*/}" >> $GITHUB_OUTPUT
+          echo "matrix_osx_count=${{ github.event.inputs.osx_count }}" >> $GITHUB_OUTPUT
   ci:
     needs: matrix
     strategy:
