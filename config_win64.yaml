@@ -1,0 +1,20 @@
+log:
+  level: info
+  job_level: info
+
+runner:
+  file: .runner
+  env_file: .env
+  capacity: 1
+  timeout: 3h
+  shutdown_timeout: 1h
+  insecure: false
+  fetch_timeout: 5s
+  labels: ["gh-win64:host"]
+
+cache:
+  enabled: true
+  dir:
+
+host:
+  workdir_parent:

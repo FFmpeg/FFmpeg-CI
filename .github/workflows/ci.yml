@@ -144,7 +144,7 @@ jobs:
         run: |
           RUNNER_RET=0
           while [[ "$RUNNER_RET" == "0" ]]; do
-            ./runner one-job -c config.yaml |& tee runner.log && RUNNER_RET=$? || RUNNER_RET=$?
+            ./runner one-job -c config.yaml && RUNNER_RET=$? || RUNNER_RET=$?
             if [[ "$RUNNER_RET" == "2" ]] then
               # No Jobs left
               exit 0
@@ -190,6 +190,10 @@ jobs:
         uses: ./.github/actions/setup-runner
         with:
           runner-version: ${{ needs.matrix.outputs.runner_version }}
+      - name: Register Runner
+        run: echo '${{ matrix.reg_file }}' | base64 -d > .runner
+      - name: Run Runner
+        run: ./runner.exe one-job -c config_win64.yaml
   osxci:
     needs: matrix
     name: osxci (${{ matrix.runner_id }})
@@ -205,3 +209,7 @@ jobs:
         uses: ./.github/actions/setup-runner
         with:
           runner-version: ${{ needs.matrix.outputs.runner_version }}
+      - name: Register Runner
+        run: echo '${{ matrix.reg_file }}' | base64 -d > .runner
+      - name: Run Runner
+        run: ./runner one-job -c config_osx.yaml
