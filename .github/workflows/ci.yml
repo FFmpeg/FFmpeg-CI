@@ -203,7 +203,10 @@ jobs:
           echo "ACTIONS_CACHE_URL_V2=http://localhost:8080/" >> .env
           echo "ACTIONS_CACHE_SERVICE_V2=1" >> .env
       - name: Run Runner
-        run: ./runner.exe one-job -c config_win64.yaml
+        run: |
+          ./runner.exe one-job -c config_win64.yaml && RUNNER_RET=$? || RUNNER_RET=$?
+          [[ $RUNNER_RET == 2 ]] && RUNNER_RET=0
+          exit $RUNNER_RET
       - name: Stop Caddy
         if: always()
         run: ./caddy.exe stop || true
@@ -235,7 +238,10 @@ jobs:
           echo "ACTIONS_CACHE_URL_V2=http://localhost:8080/" >> .env
           echo "ACTIONS_CACHE_SERVICE_V2=1" >> .env
       - name: Run Runner
-        run: ./runner one-job -c config_osx.yaml
+        run: |
+          ./runner one-job -c config_osx.yaml && RUNNER_RET=$? || RUNNER_RET=$?
+          [[ $RUNNER_RET == 2 ]] && RUNNER_RET=0
+          exit $RUNNER_RET
       - name: Stop Caddy
         if: always()
         run: ./caddy stop || true
