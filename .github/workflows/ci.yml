@@ -46,7 +46,7 @@ jobs:
           VER="$(curl -s https://code.forgejo.org/api/v1/repos/forgejo/runner/releases/latest | jq .name -r | cut -c 2-)"
           echo "version=$VER" >> $GITHUB_OUTPUT
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Setup Runner
         uses: ./.github/actions/setup-runner
         with:
@@ -99,7 +99,7 @@ jobs:
           sudo rm -rf /opt/ghc /usr/local/.ghcup /usr/local/lib/android
           df -h
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Setup Runner
         uses: ./.github/actions/setup-runner
         with:
@@ -185,7 +185,7 @@ jobs:
     if: ${{ needs.matrix.outputs.matrix_win_count > 0 }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Setup Runner
         uses: ./.github/actions/setup-runner
         with:
@@ -220,7 +220,7 @@ jobs:
     if: ${{ needs.matrix.outputs.matrix_osx_count > 0 }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Setup Runner
         uses: ./.github/actions/setup-runner
         with:
