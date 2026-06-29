@@ -115,7 +115,7 @@ jobs:
           fi
       - name: Restore Actions Cache
         id: act_cache
-        uses: actions/cache/restore@v5
+        uses: actions/cache/restore@v6
         with:
           key: act-ck-cache2-${{ matrix.os }}
           path: /var/act
@@ -163,7 +163,7 @@ jobs:
         run: |
           echo "hash=$(find act -type f -print0 | sort -z | xargs -0 sha1sum | sha1sum | cut -d' ' -f1)" >> $GITHUB_OUTPUT
       - name: Save Actions Cache
-        uses: actions/cache/save@v5
+        uses: actions/cache/save@v6
         if: ${{ format('act-cache-{0}-{1}', matrix.os, steps.cache_hash.outputs.hash) != steps.act_cache.outputs.cache-matched-key }}
         with:
           key: act-ck-cache-${{ matrix.os }}-${{ steps.cache_hash.outputs.hash }}
