@@ -30,7 +30,7 @@ runs:
         chmod +x runner
     - name: Setup Go
       if: runner.os != 'Linux' && steps.cache_runner.outputs.cache-hit != 'true'
-      uses: actions/setup-go@v6
+      uses: actions/setup-go@v7
       with:
         go-version: 'stable'
     - name: Build Runner
