@@ -120,11 +120,6 @@ jobs:
         run: |
           sudo mkdir -p /var/act /var/actcache
           sudo chown -R $(id -u):$(id -g) /var/act /var/actcache
-      - name: Restore Docker Images
-        id: docker_cache_restore
-        uses: ./.github/actions/docker-cache-restore
-        with:
-          cache-key: docker-image-cache-${{ matrix.os }}
       - name: Get Internal Env-Vars
         uses: crazy-max/ghaction-github-runtime@v4
       - name: Start Cacheproxy
@@ -148,11 +143,6 @@ jobs:
             fi
           done
           exit 0
-      - name: Cache Docker Images
-        uses: ./.github/actions/docker-cache-save
-        with:
-          cache-key: docker-image-cache-${{ matrix.os }}
-          matched-key: ${{ steps.docker_cache_restore.outputs.cache-matched-key }}
       - name: Calculate Cache Hash
         id: cache_hash
         run: |
