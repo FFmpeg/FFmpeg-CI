@@ -91,15 +91,10 @@ jobs:
     runs-on: ${{ matrix.os }}
     if: ${{ needs.matrix.outputs.matrix_count > 0 }}
     steps:
-      - name: Free up disk space
-        shell: bash -c "nohup bash -e {0} >/tmp/cleanup.log &"
-        run: |
-          df -h
-          docker system prune -a -f
-          sudo rm -rf /opt/ghc /usr/local/.ghcup /usr/local/lib/android
-          df -h
       - name: Checkout
         uses: actions/checkout@v7
+      - name: Free up disk space
+        run: ./free_disk_space.sh
       - name: Setup Runner
         uses: ./.github/actions/setup-runner
         with:
@@ -168,8 +163,6 @@ jobs:
         with:
           key: act-ck-cache-${{ matrix.os }}-${{ steps.cache_hash.outputs.hash }}
           path: act
-      - name: Cleanup result
-        run: cat /tmp/cleanup.log
       - name: Result output
         run: |
           cat ./cacheproxy/Caddyfile
