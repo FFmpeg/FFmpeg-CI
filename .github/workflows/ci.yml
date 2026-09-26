@@ -30,7 +30,7 @@ defaults:
 
 jobs:
   matrix:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     outputs:
       matrix: ${{ steps.matrix.outputs.matrix }}
       matrix_win: ${{ steps.matrix.outputs.matrix_win }}
