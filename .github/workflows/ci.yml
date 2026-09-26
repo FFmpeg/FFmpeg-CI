@@ -74,19 +74,10 @@ jobs:
       - name: Calculate Matrix
         id: matrix
         run: |
-          # The dispatcher asks for one Linux runner per task it saw. Tasks that
-          # were picked up in the meantime no longer need one, so cap the counts
-          # by what is still waiting. Forgejo's API is readable anonymously; if
-          # the call fails, keep the requested counts.
-          WAITING="$(curl -sf -m 20 'https://code.ffmpeg.org/api/v1/repos/FFmpeg/FFmpeg/actions/tasks?status=waiting&limit=1' | jq -r .total_count)" || WAITING=999
-          [[ "$WAITING" =~ ^[0-9]+$ ]] || WAITING=999
-          echo "Waiting tasks: $WAITING"
-          X86_COUNT=$(( ${{ github.event.inputs.x86_64_count }} < WAITING ? ${{ github.event.inputs.x86_64_count }} : WAITING ))
-          ARM_COUNT=$(( ${{ github.event.inputs.aarch64_count }} < WAITING ? ${{ github.event.inputs.aarch64_count }} : WAITING ))
-          X86=$(seq 1 "$X86_COUNT" | jq -cs '[.[] | {"os":"ubuntu-latest", "runner_id":.}]')
-          ARM=$(seq 1 "$ARM_COUNT" | jq -cs '[.[] | {"os":"ubuntu-24.04-arm", "runner_id":.}]')
+          X86=$(seq 1 "${{ github.event.inputs.x86_64_count }}" | jq -cs '[.[] | {"os":"ubuntu-latest", "runner_id":.}]')
+          ARM=$(seq 1 "${{ github.event.inputs.aarch64_count }}" | jq -cs '[.[] | {"os":"ubuntu-24.04-arm", "runner_id":.}]')
           echo "matrix=$(jq -cn --argjson a "$X86" --argjson b "$ARM" '{include: ($a + $b)}')" >> $GITHUB_OUTPUT
-          echo "matrix_count=$(( X86_COUNT + ARM_COUNT ))" >> $GITHUB_OUTPUT
+          echo "matrix_count=$(( ${{ github.event.inputs.x86_64_count }} + ${{ github.event.inputs.aarch64_count }} ))" >> $GITHUB_OUTPUT
           WINX86=$(jq -cn --argjson c '${{ github.event.inputs.win_x86_64_count }}' --argjson r '${{ steps.eph_reg.outputs.eph_reg_win64 }}' '[range(1; $c+1) as $i | {"os":"windows-latest", "runner_id":$i, "reg_file":$r[$i-1]}]')
           echo "matrix_win=$(jq -cn --argjson a "$WINX86" '{include: ($a)}')" >> $GITHUB_OUTPUT
           echo "matrix_win_count=${{ github.event.inputs.win_x86_64_count }}" >> $GITHUB_OUTPUT
