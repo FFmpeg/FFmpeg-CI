@@ -43,7 +43,8 @@ jobs:
       - name: Get Runner Version
         id: runner
         run: |
-          VER="$(curl -s https://code.forgejo.org/api/v1/repos/forgejo/runner/releases/latest | jq .name -r | cut -c 2-)"
+          VER="$(curl -sf https://code.forgejo.org/api/v1/repos/forgejo/runner/releases/latest | jq -er .name | cut -c 2-)"
+          [[ -n "$VER" ]]
           echo "version=$VER" >> $GITHUB_OUTPUT
       - name: Checkout
         uses: actions/checkout@v7
