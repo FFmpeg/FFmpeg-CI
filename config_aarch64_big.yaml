@@ -1,0 +1,28 @@
+log:
+  level: info
+  job_level: info
+
+runner:
+  env_file: .env
+  capacity: 1
+  timeout: 3h
+  shutdown_timeout: 1h
+  insecure: false
+  fetch_timeout: 5s
+  labels: ["linux-aarch64-big:docker://ghcr.io/btbn/ffmpeg-builds/base:latest-arm"]
+
+cache:
+  enabled: true
+  dir: /var/actcache
+
+host:
+  workdir_parent: /var/act
+
+container:
+  network: "runnernet"
+  enable_ipv6: false
+  privileged: false
+  options:
+  workdir_parent:
+  force_pull: true
+  force_rebuild: true
