@@ -108,12 +108,12 @@ jobs:
           runner-version: ${{ needs.matrix.outputs.runner_version }}
       - name: Register Runner
         env:
-          UUID_X86_64: ${{ secrets.RUNNER_UUID_X86_64 }}
-          TOKEN_X86_64: ${{ secrets.RUNNER_TOKEN_X86_64 }}
-          UUID_AARCH64: ${{ secrets.RUNNER_UUID_AARCH64 }}
-          TOKEN_AARCH64: ${{ secrets.RUNNER_TOKEN_AARCH64 }}
-          UUID_AARCH64_BIG: ${{ secrets.RUNNER_UUID_AARCH64_BIG }}
-          TOKEN_AARCH64_BIG: ${{ secrets.RUNNER_TOKEN_AARCH64_BIG }}
+          UUID_X86_64: ${{ secrets.UUID_X86_64 }}
+          TOKEN_X86_64: ${{ secrets.TOKEN_X86_64 }}
+          UUID_AARCH64: ${{ secrets.UUID_AARCH64 }}
+          TOKEN_AARCH64: ${{ secrets.TOKEN_AARCH64 }}
+          UUID_AARCH64_BIG: ${{ secrets.UUID_AARCH64_BIG }}
+          TOKEN_AARCH64_BIG: ${{ secrets.TOKEN_AARCH64_BIG }}
         run: |
           case "${{ matrix.config }}" in
             x86_64) UUID="$UUID_X86_64"; TOKEN="$TOKEN_X86_64" ;;
@@ -121,7 +121,10 @@ jobs:
             aarch64_big) UUID="$UUID_AARCH64_BIG"; TOKEN="$TOKEN_AARCH64_BIG" ;;
             *) echo "Unknown runner config: ${{ matrix.config }}"; exit 1 ;;
           esac
-          [[ -n "$UUID" && -n "$TOKEN" ]]
+          if [[ -z "$UUID" || -z "$TOKEN" ]]; then
+            echo "::error::Missing runner UUID or token secret for runner config: ${{ matrix.config }}"
+            exit 1
+          fi
           printf '%s' "$UUID" > .runner-uuid
           printf '%s' "$TOKEN" > .runner-token
           mv "config_${{ matrix.config }}.yaml" config.yaml
