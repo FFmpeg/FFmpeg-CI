@@ -107,13 +107,23 @@ jobs:
         with:
           runner-version: ${{ needs.matrix.outputs.runner_version }}
       - name: Register Runner
+        env:
+          UUID_X86_64: ${{ secrets.RUNNER_UUID_X86_64 }}
+          TOKEN_X86_64: ${{ secrets.RUNNER_TOKEN_X86_64 }}
+          UUID_AARCH64: ${{ secrets.RUNNER_UUID_AARCH64 }}
+          TOKEN_AARCH64: ${{ secrets.RUNNER_TOKEN_AARCH64 }}
+          UUID_AARCH64_BIG: ${{ secrets.RUNNER_UUID_AARCH64_BIG }}
+          TOKEN_AARCH64_BIG: ${{ secrets.RUNNER_TOKEN_AARCH64_BIG }}
         run: |
           case "${{ matrix.config }}" in
-            x86_64) printf '%s\n' '${{ secrets.RUNNER_REGISTRATION_X86_64 }}' > .runner ;;
-            aarch64) printf '%s\n' '${{ secrets.RUNNER_REGISTRATION_AARCH64 }}' > .runner ;;
-            aarch64_big) printf '%s\n' '${{ secrets.RUNNER_REGISTRATION_AARCH64_BIG }}' > .runner ;;
+            x86_64) UUID="$UUID_X86_64"; TOKEN="$TOKEN_X86_64" ;;
+            aarch64) UUID="$UUID_AARCH64"; TOKEN="$TOKEN_AARCH64" ;;
+            aarch64_big) UUID="$UUID_AARCH64_BIG"; TOKEN="$TOKEN_AARCH64_BIG" ;;
             *) echo "Unknown runner config: ${{ matrix.config }}"; exit 1 ;;
           esac
+          [[ -n "$UUID" && -n "$TOKEN" ]]
+          printf '%s' "$UUID" > .runner-uuid
+          printf '%s' "$TOKEN" > .runner-token
           mv "config_${{ matrix.config }}.yaml" config.yaml
       - name: Create runner directories
         run: |
@@ -134,9 +144,10 @@ jobs:
       - name: Run Runner
         id: runner
         run: |
+          RUNNER_ARGS=( --url "https://code.ffmpeg.org/" --uuid "$(<.runner-uuid)" --token-url "file://$PWD/.runner-token" )
           RUNNER_RET=0
           while [[ "$RUNNER_RET" == "0" ]]; do
-            ./runner one-job -c config.yaml && RUNNER_RET=$? || RUNNER_RET=$?
+            ./runner one-job -c config.yaml "${RUNNER_ARGS[@]}" && RUNNER_RET=$? || RUNNER_RET=$?
             if [[ "$RUNNER_RET" == "2" ]] then
               # No Jobs left
               exit 0

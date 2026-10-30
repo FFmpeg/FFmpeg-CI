@@ -3,7 +3,6 @@ log:
   job_level: info
 
 runner:
-  file: .runner
   env_file: .env
   capacity: 1
   timeout: 3h
