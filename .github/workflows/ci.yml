@@ -124,10 +124,10 @@ jobs:
           TOKEN_AARCH64_BIG: ${{ secrets.TOKEN_AARCH64_BIG }}
         run: |
           case "${{ matrix.config }}" in
-            x86_64) UUID="$UUID_X86_64"; TOKEN="$TOKEN_X86_64" ;;
-            x86_64_big) UUID="$UUID_X86_64_BIG"; TOKEN="$TOKEN_X86_64_BIG" ;;
-            aarch64) UUID="$UUID_AARCH64"; TOKEN="$TOKEN_AARCH64" ;;
-            aarch64_big) UUID="$UUID_AARCH64_BIG"; TOKEN="$TOKEN_AARCH64_BIG" ;;
+            x86_64) LABEL="linux-amd64"; UUID="$UUID_X86_64"; TOKEN="$TOKEN_X86_64" ;;
+            x86_64_big) LABEL="linux-amd64-big"; UUID="$UUID_X86_64_BIG"; TOKEN="$TOKEN_X86_64_BIG" ;;
+            aarch64) LABEL="linux-aarch64"; UUID="$UUID_AARCH64"; TOKEN="$TOKEN_AARCH64" ;;
+            aarch64_big) LABEL="linux-aarch64-big"; UUID="$UUID_AARCH64_BIG"; TOKEN="$TOKEN_AARCH64_BIG" ;;
             *) echo "Unknown runner config: ${{ matrix.config }}"; exit 1 ;;
           esac
           if [[ -z "$UUID" || -z "$TOKEN" ]]; then
@@ -136,7 +136,8 @@ jobs:
           fi
           printf '%s' "$UUID" > .runner-uuid
           printf '%s' "$TOKEN" > .runner-token
-          mv "config_${{ matrix.config }}.yaml" config.yaml
+          sed "s/@LABEL@/$LABEL/" config_linux.yaml > config.yaml
+          grep -n labels config.yaml
       - name: Create runner directories
         run: |
           sudo mkdir -p /var/act /var/actcache
