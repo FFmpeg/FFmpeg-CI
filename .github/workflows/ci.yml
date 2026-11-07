@@ -8,6 +8,11 @@ on:
         required: true
         type: number
         default: 0
+      x86_64_big_count:
+        description: 'Number of big x86_64 runners'
+        required: true
+        type: number
+        default: 0
       aarch64_count:
         description: 'Number of aarch64 runners'
         required: true
@@ -80,10 +85,11 @@ jobs:
         id: matrix
         run: |
           X86=$(seq 1 "${{ github.event.inputs.x86_64_count }}" | jq -cs '[.[] | {"os":"ubuntu-latest", "config":"x86_64", "runner_id":.}]')
+          X86BIG=$(seq 1 "${{ github.event.inputs.x86_64_big_count }}" | jq -cs '[.[] | {"os":"ubuntu-26.04-16core", "config":"x86_64_big", "runner_id":.}]')
           ARM=$(seq 1 "${{ github.event.inputs.aarch64_count }}" | jq -cs '[.[] | {"os":"ubuntu-24.04-arm", "config":"aarch64", "runner_id":.}]')
           ARMBIG=$(seq 1 "${{ github.event.inputs.aarch64_big_count }}" | jq -cs '[.[] | {"os":"blacksmith-16vcpu-ubuntu-2404-arm", "config":"aarch64_big", "runner_id":.}]')
-          echo "matrix=$(jq -cn --argjson a "$X86" --argjson b "$ARM" --argjson c "$ARMBIG" '{include: ($a + $b + $c)}')" >> $GITHUB_OUTPUT
-          echo "matrix_count=$(( ${{ github.event.inputs.x86_64_count }} + ${{ github.event.inputs.aarch64_count }} + ${{ github.event.inputs.aarch64_big_count }} ))" >> $GITHUB_OUTPUT
+          echo "matrix=$(jq -cn --argjson a "$X86" --argjson b "$X86BIG" --argjson c "$ARM" --argjson d "$ARMBIG" '{include: ($a + $b + $c + $d)}')" >> $GITHUB_OUTPUT
+          echo "matrix_count=$(( ${{ github.event.inputs.x86_64_count }} + ${{ github.event.inputs.x86_64_big_count }} + ${{ github.event.inputs.aarch64_count }} + ${{ github.event.inputs.aarch64_big_count }} ))" >> $GITHUB_OUTPUT
           WINX86=$(jq -cn --argjson c '${{ github.event.inputs.win_x86_64_count }}' --argjson r '${{ steps.eph_reg.outputs.eph_reg_win64 }}' '[range(1; $c+1) as $i | {"os":"windows-latest", "runner_id":$i, "reg_file":$r[$i-1]}]')
           echo "matrix_win=$(jq -cn --argjson a "$WINX86" '{include: ($a)}')" >> $GITHUB_OUTPUT
           echo "matrix_win_count=${{ github.event.inputs.win_x86_64_count }}" >> $GITHUB_OUTPUT
@@ -110,6 +116,8 @@ jobs:
         env:
           UUID_X86_64: ${{ secrets.UUID_X86_64 }}
           TOKEN_X86_64: ${{ secrets.TOKEN_X86_64 }}
+          UUID_X86_64_BIG: ${{ secrets.UUID_X86_64_BIG }}
+          TOKEN_X86_64_BIG: ${{ secrets.TOKEN_X86_64_BIG }}
           UUID_AARCH64: ${{ secrets.UUID_AARCH64 }}
           TOKEN_AARCH64: ${{ secrets.TOKEN_AARCH64 }}
           UUID_AARCH64_BIG: ${{ secrets.UUID_AARCH64_BIG }}
@@ -117,6 +125,7 @@ jobs:
         run: |
           case "${{ matrix.config }}" in
             x86_64) UUID="$UUID_X86_64"; TOKEN="$TOKEN_X86_64" ;;
+            x86_64_big) UUID="$UUID_X86_64_BIG"; TOKEN="$TOKEN_X86_64_BIG" ;;
             aarch64) UUID="$UUID_AARCH64"; TOKEN="$TOKEN_AARCH64" ;;
             aarch64_big) UUID="$UUID_AARCH64_BIG"; TOKEN="$TOKEN_AARCH64_BIG" ;;
             *) echo "Unknown runner config: ${{ matrix.config }}"; exit 1 ;;
