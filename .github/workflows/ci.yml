@@ -85,7 +85,7 @@ jobs:
         id: matrix
         run: |
           X86=$(seq 1 "${{ github.event.inputs.x86_64_count }}" | jq -cs '[.[] | {"os":"ubuntu-latest", "config":"x86_64", "runner_id":.}]')
-          X86BIG=$(seq 1 "${{ github.event.inputs.x86_64_big_count }}" | jq -cs '[.[] | {"os":"ubuntu-26.04-16core", "config":"x86_64_big", "runner_id":.}]')
+          X86BIG=$(seq 1 "${{ github.event.inputs.x86_64_big_count }}" | jq -cs '[.[] | {"os":"blacksmith-16vcpu-ubuntu-2604", "config":"x86_64_big", "runner_id":.}]')
           ARM=$(seq 1 "${{ github.event.inputs.aarch64_count }}" | jq -cs '[.[] | {"os":"ubuntu-24.04-arm", "config":"aarch64", "runner_id":.}]')
           ARMBIG=$(seq 1 "${{ github.event.inputs.aarch64_big_count }}" | jq -cs '[.[] | {"os":"blacksmith-16vcpu-ubuntu-2404-arm", "config":"aarch64_big", "runner_id":.}]')
           echo "matrix=$(jq -cn --argjson a "$X86" --argjson b "$X86BIG" --argjson c "$ARM" --argjson d "$ARMBIG" '{include: ($a + $b + $c + $d)}')" >> $GITHUB_OUTPUT
